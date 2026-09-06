@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure File Upload for ML</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; display: flex; justify-content: center; padding: 40px; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); width: 500px; }
+        h2 { color: #2c3e50; text-align: center; }
+        .upload-card { border: 2px dashed #3498db; padding: 30px; border-radius: 10px; text-align: center; background: #fdfdfd; }
+        .upload-card:hover { background: #f0f7ff; }
+        input[type="file"] { margin: 20px 0; }
+        .btn { background: #3498db; color: white; padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; width: 100%; }
+        .btn:hover { background: #2980b9; }
+        .flash { padding: 15px; margin-bottom: 20px; border-radius: 6px; font-size: 14px; text-align: center; }
+        .flash-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .file-list { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
+        .file-item { display: flex; justify-content: space-between; padding: 10px; background: #fff; margin-bottom: 5px; border-radius: 4px; border: 1px solid #eee; }
+        .file-item a { color: #3498db; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>AI Data Uploader</h2>
+        
+        <!-- Flash messages for Success/Error -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="flash {% if 'successfully' in message %}flash-success{% else %}flash-error{% endif %}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="upload-card">
+            <p>Upload an <strong>Image, PDF, or CSV</strong> for analysis</p>
+            <form action="/upload" method="post" enctype="multipart/form-data">
+                <input type="file" name="file" required>
+                <button type="submit" class="btn">Process with ML Model</button>
+            </form>
+        </div>
+
+        <div class="file-list">
+            <h3>Recent Uploads</h3>
+            {% if files %}
+                {% for file in files %}
+                    <div class="file-item">
+                        <span>{{ file }}</span>
+                        <a href="{{ url_for('uploaded_file', filename=file) }}" target="_blank">View File</a>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p style="color:#999; text-align:center;">No files uploaded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

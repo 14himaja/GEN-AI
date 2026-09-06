@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Security & Rate Limiting</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 50px; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 500px; }
+        h2 { color: #1a73e8; text-align: center; }
+        .info { background: #e8f0fe; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        button:hover { background: #1557b0; }
+        #log { margin-top: 20px; padding: 15px; background: #2c2c2c; color: #00ff00; border-radius: 8px; height: 150px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+        .err { color: #ff4444; }
+        .success { color: #00ff00; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Secure AI Endpoint</h2>
+        <div class="info">
+            <strong>Rules:</strong><br>
+            1. Valid API Key required: <code>sk-ai-12345</code><br>
+            2. Rate Limit: <strong>3 requests per minute</strong>.
+        </div>
+        
+        <input type="text" id="api-key" placeholder="Enter API Key">
+        <button id="predict-btn">Call AI Model</button>
+
+        <div id="log">Logs will appear here...</div>
+    </div>
+
+    <script>
+        const log = document.getElementById('log');
+        const apiKeyInput = document.getElementById('api-key');
+        const btn = document.getElementById('predict-btn');
+
+        function addLog(msg, type='info') {
+            const time = new Date().toLocaleTimeString();
+            log.innerHTML = `<div class="${type}">[${time}] ${msg}</div>` + log.innerHTML;
+        }
+
+        btn.onclick = async () => {
+            const apiKey = apiKeyInput.value;
+            
+            try {
+                const res = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-KEY': apiKey
+                    },
+                    body: JSON.stringify({text: "I love learning Flask!"})
+                });
+
+                const data = await res.json();
+
+                if (res.status === 200) {
+                    addLog(`Success: Prediction = ${data.prediction}`, 'success');
+                } else if (res.status === 429) {
+                    addLog(`ERROR 429: ${data.error} - ${data.message}`, 'err');
+                } else if (res.status === 401) {
+                    addLog(`ERROR 401: ${data.error}`, 'err');
+                }
+            } catch (e) {
+                addLog(`Network Error: ${e.message}`, 'err');
+            }
+        };
+    </script>
+</body>
+</html>

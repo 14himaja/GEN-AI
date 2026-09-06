@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Streaming Response</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #121212; color: #e0e0e0; display: flex; justify-content: center; padding: 50px; }
+        .container { background: #1e1e1e; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); width: 600px; }
+        h2 { color: #bb86fc; text-align: center; }
+        #response-box { 
+            min-height: 100px; 
+            background: #2c2c2c; 
+            padding: 20px; 
+            border-radius: 8px; 
+            border-left: 4px solid #bb86fc;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            font-size: 18px;
+        }
+        button { 
+            width: 100%; 
+            padding: 12px; 
+            background: #03dac6; 
+            color: #000; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        button:disabled { background: #555; cursor: not-allowed; }
+        .cursor { display: inline-block; width: 10px; height: 18px; background: #03dac6; animation: blink 0.7s infinite; margin-left: 2px; }
+        @keyframes blink { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>AI Streamer (LLM Style)</h2>
+        <button id="stream-btn">Generate AI Response</button>
+        <div id="response-box"><span id="text-content">Click the button to see streaming in action...</span><span id="cursor" style="display:none;" class="cursor"></span></div>
+    </div>
+
+    <script>
+        const streamBtn = document.getElementById('stream-btn');
+        const textContent = document.getElementById('text-content');
+        const cursor = document.getElementById('cursor');
+
+        streamBtn.onclick = () => {
+            // 1. Reset UI
+            textContent.innerText = "";
+            streamBtn.disabled = true;
+            cursor.style.display = 'inline-block';
+
+            // 2. Use EventSource to connect to the Flask Stream
+            // EventSource is built into browsers for Server-Sent Events (SSE)
+            const eventSource = new EventSource('/stream');
+
+            // 3. Listen for messages from the server
+            eventSource.onmessage = (event) => {
+                // event.data contains the word yielded by Python
+                textContent.innerText += event.data + " ";
+                
+                // Auto-scroll to bottom if box is large
+                window.scrollTo(0, document.body.scrollHeight);
+            };
+
+            // 4. Handle errors or completion
+            eventSource.onerror = () => {
+                // SSE connections stay open, so we close it manually when done
+                eventSource.close();
+                streamBtn.disabled = false;
+                cursor.style.display = 'none';
+            };
+        };
+    </script>
+</body>
+</html>

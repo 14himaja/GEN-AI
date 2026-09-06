@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Live Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Load Socket.IO client library from CDN -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>WebSocket Live Dashboard</h1>
+        
+        <div class="status-panel">
+            <p>Status: <span id="status" class="disconnected">Disconnected</span></p>
+            <p>Live Server Value: <span id="live-value">--</span></p>
+        </div>
+
+        <div class="chat-panel">
+            <h3>Global Chat (Real-time Broadcast)</h3>
+            <div id="messages" class="message-box"></div>
+            
+            <div class="input-area">
+                <input type="text" id="username" placeholder="Your Name" value="Guest">
+                <input type="text" id="message-input" placeholder="Type a message...">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
