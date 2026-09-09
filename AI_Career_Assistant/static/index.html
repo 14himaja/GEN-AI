@@ -1,0 +1,271 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Career Assistant | Smart Resume & Job Matching</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="navbar">
+            <div class="logo-group">
+                <div class="logo-icon">⚡</div>
+                <div class="logo-text">
+                    <h1><span>Career AI</span></h1>
+                    <p class="tagline">Agentic Resume Evaluation & LangChain FAISS RAG Matcher</p>
+                </div>
+            </div>
+            <div class="badge-pill">
+                <span class="live-dot"></span> Powered by LangChain & Google Gemini
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Hero Header -->
+            <section class="hero-header">
+                <h2>Unlock Your Career Match Potential</h2>
+                <p>Upload your resume to discover your alignment across <strong>5 core tech tracks</strong> with full comparison across <strong>all 20 mock JDs</strong>, or compare against a <strong>specific Job Description</strong>.</p>
+            </section>
+
+            <!-- Mode Selector Tabs -->
+            <div class="mode-tabs">
+                <button type="button" class="mode-tab active" id="tabStandard">
+                    <span class="tab-icon">🎯</span> 5-Role Track & Full JD Comparisons
+                </button>
+                <button type="button" class="mode-tab" id="tabCustomJD">
+                    <span class="tab-icon">📋</span> Custom JD Comparison (Direct Match)
+                </button>
+            </div>
+
+            <!-- Upload & Input Section -->
+            <section class="upload-section">
+                <!-- Dropzone for Resume -->
+                <div class="dropzone-card" id="dropzone">
+                    <input type="file" id="resumeInput" accept=".pdf,.docx,.doc,.txt" hidden>
+                    <div class="dropzone-content">
+                        <div class="upload-icon-circle">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </div>
+                        <h3>Upload Your Resume</h3>
+                        <p class="dropzone-sub">Drag & drop your file here, or <button type="button" class="browse-btn" id="browseBtn">browse files</button></p>
+                        <span class="file-hint">Supports PDF, DOCX, TXT (Max 10MB)</span>
+                        <div id="selectedFileName" class="selected-file-badge hidden">
+                            <span class="file-name-text"></span>
+                            <button type="button" id="removeFileBtn">&times;</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom JD Input Box -->
+                <div id="customJDSection" class="custom-jd-card hidden">
+                    <div class="custom-jd-header">
+                        <div class="jd-title-group">
+                            <span class="jd-icon">📝</span>
+                            <h4>Target Job Description (JD)</h4>
+                        </div>
+                        <span class="jd-hint">Paste requirements, qualifications & responsibilities</span>
+                    </div>
+                    <textarea 
+                        id="customJDInput" 
+                        class="custom-jd-textarea" 
+                        placeholder="Paste the job description here... (e.g. 'We are looking for a Senior AI Engineer with experience in PyTorch, LangChain, and RAG pipelines...')"
+                        rows="6"
+                    ></textarea>
+                </div>
+
+                <!-- Action Button -->
+                <div class="action-row">
+                    <button type="button" class="btn-primary" id="analyzeBtn" disabled>
+                        <span class="btn-text" id="btnText">Analyze Resume & Find Matches</span>
+                        <span class="btn-loader hidden"></span>
+                    </button>
+                </div>
+
+                <!-- Processing Stepper -->
+                <div id="processingSection" class="processing-card hidden">
+                    <div class="processing-header">
+                        <h4 id="processingTitle">Agent Pipeline in Progress...</h4>
+                        <span class="spinner-icon"></span>
+                    </div>
+                    <div class="stepper-list">
+                        <div class="step-item active" id="step1">
+                            <div class="step-num">1</div>
+                            <div class="step-info">
+                                <h5>Extracting Resume Text</h5>
+                                <p>Reading sections and structuring data</p>
+                            </div>
+                        </div>
+                        <div class="step-item" id="step2">
+                            <div class="step-num">2</div>
+                            <div class="step-info">
+                                <h5>Parsing Candidate Profile</h5>
+                                <p>LangChain LCEL Chain with Gemini 2.5 Flash</p>
+                            </div>
+                        </div>
+                        <div class="step-item" id="step3">
+                            <div class="step-num">3</div>
+                            <div class="step-info">
+                                <h5 id="step3Title">Evaluating 5 Industry Roles</h5>
+                                <p id="step3Desc">PromptTemplate | ChatModel Runnable Chain</p>
+                            </div>
+                        </div>
+                        <div class="step-item" id="step4">
+                            <div class="step-num">4</div>
+                            <div class="step-info">
+                                <h5 id="step4Title">LangChain FAISS Vector Search</h5>
+                                <p id="step4Desc">Comparing similarity across every mock JD</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section id="resultsSection" class="results-section hidden">
+                <!-- Candidate Profile Card -->
+                <div class="candidate-card glass-panel">
+                    <div class="candidate-header">
+                        <div class="avatar-circle" id="candidateAvatar">CA</div>
+                        <div class="candidate-meta">
+                            <h3 id="candidateName">Candidate Name</h3>
+                            <p id="candidateContact">email@example.com</p>
+                        </div>
+                        <div class="exp-badge">
+                            <span class="exp-value" id="candidateExp">0</span>
+                            <span class="exp-label">Years Exp</span>
+                        </div>
+                    </div>
+                    <div class="candidate-summary">
+                        <p id="candidateSummary">Executive summary of strengths...</p>
+                    </div>
+                    <div class="skills-wrap">
+                        <span class="skills-title">Extracted Skills:</span>
+                        <div class="skills-tags" id="candidateSkills"></div>
+                    </div>
+                </div>
+
+                <!-- MODE A: Standard 5-Roles + All JD Comparisons Views -->
+                <div id="standardResultsView">
+                    <div class="section-title-wrap">
+                        <h3>Role Compatibility Breakdown</h3>
+                        <p>Calculated match percentage across 5 core technical tracks</p>
+                    </div>
+                    <div class="roles-grid" id="rolesGrid"></div>
+
+                    <!-- Top 3 Job Highlights -->
+                    <div class="section-title-wrap">
+                        <div class="title-with-badge">
+                            <h3>Top 3 Recommended Job Matches</h3>
+                            <span class="rag-badge">LangChain FAISS Vector Search</span>
+                        </div>
+                        <p>Your highest-scoring matches from our mock industry job database</p>
+                    </div>
+                    <div class="jobs-grid" id="topJobsGrid"></div>
+
+                    <!-- ALL JD Comparison Scores Table / Grid -->
+                    <div class="all-jds-wrapper">
+                        <div class="all-jds-header">
+                            <div>
+                                <h3>All Job Descriptions Comparison</h3>
+                                <p>Detailed similarity score for every mock job description indexed in the FAISS vector store</p>
+                            </div>
+                            <div class="filter-group">
+                                <label for="roleFilter">Filter Category:</label>
+                                <select id="roleFilter" class="role-filter-select">
+                                    <option value="ALL">All Roles (20 JDs)</option>
+                                    <option value="AI / ML Engineer">AI / ML Engineer</option>
+                                    <option value="Full Stack Developer">Full Stack Developer</option>
+                                    <option value="Data Engineer">Data Engineer</option>
+                                    <option value="DevOps / Cloud Engineer">DevOps / Cloud Engineer</option>
+                                    <option value="Backend Developer">Backend Developer</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="all-jds-grid" id="allJdsGrid">
+                            <!-- All 20 JD scorecards populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODE B: Custom JD Direct Comparison View -->
+                <div id="customJDResultsView" class="hidden">
+                    <div class="section-title-wrap">
+                        <div class="title-with-badge">
+                            <h3>Direct Job Description Match Report</h3>
+                            <span class="rag-badge">LangChain Vector Similarity + Deep Evaluation</span>
+                        </div>
+                        <p>Detailed analysis comparing your resume against the provided Job Description</p>
+                    </div>
+
+                    <!-- Custom JD Big Scorecard -->
+                    <div class="custom-score-card glass-panel">
+                        <div class="score-hero-row">
+                            <div class="score-circle-wrap">
+                                <div class="score-circle" id="customMatchCircle">
+                                    <span class="big-score-num" id="customScoreNum">0</span>
+                                    <span class="big-score-pct">%</span>
+                                </div>
+                                <span class="score-circle-label">Overall Match</span>
+                            </div>
+                            <div class="score-verdict-wrap">
+                                <h4>Executive Assessment</h4>
+                                <p id="customVerdictText">Verdict assessment text...</p>
+                                <div class="sub-score-pill">
+                                    <span>Vector Similarity Score:</span>
+                                    <strong id="semanticScoreVal">0%</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Skills Comparison (Matched vs Missing) -->
+                        <div class="skills-comparison-grid">
+                            <div class="skills-comp-card matched-box">
+                                <h5>✅ Matched Skills & Capabilities</h5>
+                                <div class="skills-tags" id="customMatchedSkills"></div>
+                            </div>
+                            <div class="skills-comp-card missing-box">
+                                <h5>⚠️ Missing or Underrepresented Skills</h5>
+                                <div class="skills-tags" id="customMissingSkills"></div>
+                            </div>
+                        </div>
+
+                        <!-- Strengths & Recommendations -->
+                        <div class="feedback-grid">
+                            <div class="feedback-col strengths-col">
+                                <h5>⭐ Key Strengths for this Role</h5>
+                                <ul id="customStrengthsList"></ul>
+                            </div>
+                            <div class="feedback-col gaps-col">
+                                <h5>💡 Recommendations to Boost Selection</h5>
+                                <ul id="customGapsList"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Built with <strong>LangChain</strong>, <strong>FastAPI</strong>, <strong>Google Gemini Embeddings</strong> & <strong>FAISS</strong></p>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

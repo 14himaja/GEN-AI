@@ -1,5 +1,0 @@
-langchain
-langchain-google-genai
-langchain-community
-duckduckgo-search
-python-dotenv
