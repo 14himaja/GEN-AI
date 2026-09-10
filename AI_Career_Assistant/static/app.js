@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Frontend Logic for AI Career Assistant
  * Updated:
  * 1. Prominent explicit percentage display for 5-Roles (no missing numbers).
@@ -175,9 +175,9 @@ document.addEventListener("DOMContentLoaded", () => {
         resultsSection.classList.add("hidden");
         setStep(1);
 
-        const t1 = setTimeout(() => setStep(2), 1200);
-        const t2 = setTimeout(() => setStep(3), 2800);
-        const t3 = setTimeout(() => setStep(4), 5000);
+        const t1 = setTimeout(() => setStep(2), 800);
+        const t2 = setTimeout(() => setStep(3), 1800);
+        const t3 = setTimeout(() => setStep(4), 3200);
 
         const formData = new FormData();
         formData.append("file", currentFile);

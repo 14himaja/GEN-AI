@@ -1,4 +1,4 @@
-﻿"""
+"""
 Job Description Matcher Agent (RAG Pipeline using purely LangChain built-ins)
 Uses:
 - LangChain GoogleGenerativeAIEmbeddings (models/gemini-embedding-001)
@@ -13,18 +13,27 @@ from dotenv import load_dotenv
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_core.documents import Document
+from langchain_core.tools import tool
 
 from data.job_descriptions import MOCK_JOB_DESCRIPTIONS
 
 load_dotenv()
 
-# LangChain Gemini Embeddings wrapper
+@tool
+def fetch_mock_job_descriptions() -> list:
+    """
+    Mock external tool to retrieve job descriptions across hiring platforms
+    (Demonstrates LangChain Tools & Tool Calling from CampusX Video 16 & 17).
+    """
+    return MOCK_JOB_DESCRIPTIONS
+
+# LangChain Gemini Embeddings wrapper (CampusX Video 3)
 embeddings = GoogleGenerativeAIEmbeddings(
     model="models/gemini-embedding-001",
     google_api_key=os.getenv("GOOGLE_API_KEY")
 )
 
-# In-memory FAISS vector store singleton
+# In-memory FAISS vector store singleton (CampusX Video 12)
 vector_store: FAISS = None
 
 def get_or_create_vector_store() -> FAISS:
@@ -36,9 +45,12 @@ def get_or_create_vector_store() -> FAISS:
     if vector_store is not None:
         return vector_store
 
-    # Convert mock JDs to LangChain Document objects
+    # Call the LangChain @tool to fetch jobs
+    jobs_data = fetch_mock_job_descriptions.invoke({})
+
+    # Convert mock JDs to LangChain Document objects (CampusX Video 10)
     documents = []
-    for jd in MOCK_JOB_DESCRIPTIONS:
+    for jd in jobs_data:
         page_content = (
             f"Job Title: {jd['title']}\n"
             f"Category: {jd['role_category']}\n"
