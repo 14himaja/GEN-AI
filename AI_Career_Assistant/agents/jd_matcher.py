@@ -1,10 +1,6 @@
 """
-Job Description Matcher Agent (RAG Pipeline using purely LangChain built-ins)
-Uses:
-- LangChain GoogleGenerativeAIEmbeddings (models/gemini-embedding-001)
-- LangChain FAISS vector store
-- In-built similarity_search_with_relevance_scores (no custom cosine math from scratch)
-- In-built Document abstraction & metadata
+Job Description Matcher Agent — RAG pipeline using LangChain's FAISS vector
+store and Gemini embeddings to rank mock job descriptions against a resume.
 """
 
 import os
@@ -21,34 +17,24 @@ load_dotenv()
 
 @tool
 def fetch_mock_job_descriptions() -> list:
-    """
-    Mock external tool to retrieve job descriptions across hiring platforms
-    (Demonstrates LangChain Tools & Tool Calling from CampusX Video 16 & 17).
-    """
+    """Mock external tool to retrieve job descriptions across hiring platforms."""
     return MOCK_JOB_DESCRIPTIONS
 
-# LangChain Gemini Embeddings wrapper (CampusX Video 3)
 embeddings = GoogleGenerativeAIEmbeddings(
     model="models/gemini-embedding-001",
     google_api_key=os.getenv("GOOGLE_API_KEY")
 )
 
-# In-memory FAISS vector store singleton (CampusX Video 12)
-vector_store: FAISS = None
+vector_store: FAISS = None  # cached singleton, built once on first use
 
 def get_or_create_vector_store() -> FAISS:
-    """
-    Builds the FAISS vector store using LangChain's Document abstraction.
-    Embeds each mock job description and stores metadata for retrieval.
-    """
+    """Builds (once) and returns the FAISS vector store of job descriptions."""
     global vector_store
     if vector_store is not None:
         return vector_store
 
-    # Call the LangChain @tool to fetch jobs
     jobs_data = fetch_mock_job_descriptions.invoke({})
 
-    # Convert mock JDs to LangChain Document objects (CampusX Video 10)
     documents = []
     for jd in jobs_data:
         page_content = (
@@ -70,27 +56,20 @@ def get_or_create_vector_store() -> FAISS:
         }
         documents.append(Document(page_content=page_content, metadata=metadata))
 
-    # Built-in LangChain FAISS factory method
     vector_store = FAISS.from_documents(documents, embeddings)
     return vector_store
 
 def match_all_jobs(candidate_info: dict, resume_text: str) -> List[Dict[str, Any]]:
-    """
-    Compares the candidate resume against EVERY indexed mock JD using LangChain's
-    built-in FAISS vector similarity search with relevance scores.
-    Returns comparison scores for all JDs, sorted descending by match percentage.
-    """
+    """Ranks every mock JD against the candidate using FAISS similarity search."""
     db = get_or_create_vector_store()
 
-    # Query string formulated from candidate profile
     query = (
         f"Summary: {candidate_info.get('summary', '')}\n"
         f"Skills: {', '.join(candidate_info.get('skills', []))}\n"
         f"Experience: {resume_text[:1200]}"
     )
 
-    # Use LangChain built-in similarity search with scores
-    # k=len(MOCK_JOB_DESCRIPTIONS) ensures EVERY JD is compared and scored
+    # k = all JDs, so every one gets compared and scored
     results_with_scores = db.similarity_search_with_score(query, k=len(MOCK_JOB_DESCRIPTIONS))
 
     candidate_skills_lower = {s.lower() for s in candidate_info.get("skills", [])}
@@ -99,15 +78,13 @@ def match_all_jobs(candidate_info: dict, resume_text: str) -> List[Dict[str, Any
     for rank, (doc, l2_distance) in enumerate(results_with_scores, 1):
         meta = doc.metadata
         jd_skills = meta.get("skills", [])
-        
-        # Calculate overlapping skills
+
         overlapping = [
-            s for s in jd_skills 
+            s for s in jd_skills
             if s.lower() in candidate_skills_lower or any(s.lower() in cs for cs in candidate_skills_lower)
         ]
-        
-        # Convert FAISS L2 Euclidean distance to normalized 0-100 percentage
-        # Distance ranges ~ 0.3 (close) to 1.8 (far)
+
+        # FAISS L2 distance (~0.3 close to ~1.8 far) converted to a 0-100 score
         base_match = max(30, min(95, int(100 - (l2_distance * 28))))
         if len(overlapping) >= 2:
             base_match = min(98, base_match + (len(overlapping) * 3))
@@ -125,10 +102,8 @@ def match_all_jobs(candidate_info: dict, resume_text: str) -> List[Dict[str, Any
             "description": meta.get("description")
         })
 
-    # Sort descending by match score
     all_matched.sort(key=lambda x: x["match_score"], reverse=True)
-    
-    # Assign final 1-based ranks
+
     for idx, item in enumerate(all_matched, 1):
         item["rank"] = idx
 

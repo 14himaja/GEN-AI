@@ -1,11 +1,6 @@
 """
-AI Career Assistant — FastAPI Application
-
-Main orchestrator connecting FastAPI to our LangChain agents:
-1. Resume Parser: LangChain PromptTemplate + ChatGoogleGenerativeAI + JsonOutputParser
-2. Role Scorer: LangChain LCEL chain scoring 5 tech roles
-3. Job Matcher: LangChain Tools (@tool) + Document + FAISS vector similarity search
-4. Custom JD Matcher: LangChain RAG pipeline comparing resume against user-supplied JD
+AI Career Assistant — FastAPI app orchestrating the resume parsing, role
+scoring, and job matching LangChain agents.
 """
 
 import io
@@ -102,27 +97,17 @@ async def analyze_resume(
     file: UploadFile = File(...),
     custom_jd: Optional[str] = Form(None)
 ):
-    """
-    Main LangChain Agentic Pipeline:
-    1. Extracts text from the uploaded resume file.
-    2. Runs LangChain Resume Parser (PromptTemplate -> ChatGoogleGenerativeAI -> JsonOutputParser).
-    3. If custom_jd is provided:
-       - Runs LangChain Custom JD Matcher (FAISS Vector Search + LCEL Chain).
-    4. If custom_jd is NOT provided:
-       - Runs LangChain Role Scorer (5-Role LCEL Chain).
-       - Runs LangChain Job Matcher (FAISS Vector Similarity Search across all JDs).
-    """
+    """Parses the resume, then scores it against a custom JD or all 5 target roles."""
     try:
         contents = await file.read()
         raw_text = extract_text_from_file(contents, file.filename)
-        
-        # Step 1: Parse candidate details using LangChain
+
         candidate_info = await asyncio.to_thread(parse_resume, raw_text)
-        
+
         has_custom_jd = bool(custom_jd and custom_jd.strip())
 
         if has_custom_jd:
-            # Mode B: Custom JD direct comparison
+            # Compare directly against the user-supplied JD
             jd_comparison = await asyncio.to_thread(
                 compare_resume_with_custom_jd, 
                 candidate_info, 
@@ -138,7 +123,7 @@ async def analyze_resume(
                 "custom_jd_analysis": jd_comparison
             })
         else:
-            # Mode A: Standard 5-role scoring + comparison with all mock JDs
+            # No custom JD: score against the 5 target roles and all mock JDs
             task_roles = asyncio.to_thread(score_roles, candidate_info, raw_text)
             task_jobs = asyncio.to_thread(match_all_jobs, candidate_info, raw_text)
             
