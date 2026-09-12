@@ -1,0 +1,10 @@
+Student Profile
+Easy
+Student
+Himaja
+Subject
+Operating Systems
+Goal
+Semester Exam Prep
+Attempts
+Max 2 / topic

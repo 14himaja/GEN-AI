@@ -1,0 +1,24 @@
+=======================================================
+AI PERSONAL TUTOR - STUDENT STUDY NOTES (NOTEPAD)
+=======================================================
+Student:          Himaja
+Subject:          Operating Systems
+Goal:             Semester Exam Prep
+Completed Topics: Processes & Threads, Memory Management & Paging, CPU Scheduling, Process Synchronization & Semaphores, Deadlocks & Prevention, File Systems
+=======================================================
+
+MY PERSONAL STUDY NOTES:
+-------------------------------------------------------
+Student Profile
+Easy
+Student
+Himaja
+Subject
+Operating Systems
+Goal
+Semester Exam Prep
+Attempts
+Max 2 / topic
+-------------------------------------------------------
+
+Exported from SYNXA AI Personal Tutor

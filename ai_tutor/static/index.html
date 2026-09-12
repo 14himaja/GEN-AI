@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Personal Tutor | Adaptive Learning System</title>
+  <meta name="description" content="Adaptive AI Personal Tutor powered by LangGraph.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css?v=6">
+</head>
+<body>
+  <!-- Ambient Background Glows -->
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-badge">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div>
+          <h1>AI Personal Tutor</h1>
+          <p class="tagline">Your Adaptive AI Learning Companion</p>
+        </div>
+      </div>
+      <div class="header-status">
+        <button id="btn-theme-toggle" class="btn btn-secondary btn-sm" title="Toggle Light / Dark Theme">
+          <span id="theme-icon">🌙</span> <span id="theme-label">Dark</span>
+        </button>
+        <button id="btn-open-history" class="btn btn-secondary btn-sm" title="View Study History & Memory">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Study Log (<span id="history-badge-count">0</span>)
+        </button>
+        <div class="status-pill" id="session-badge">
+          <span class="pulse-dot"></span>
+          <span id="session-status-text">Ready to Learn</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Clean 4-Step Progress Tracker -->
+    <div class="stepper-bar">
+      <div class="step-pill active" id="step-nav-1">
+        <span class="step-circle">1</span>
+        <span class="step-text">Choose Subject</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-pill" id="step-nav-2">
+        <span class="step-circle">2</span>
+        <span class="step-text">Diagnostic Check</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-pill" id="step-nav-3">
+        <span class="step-circle">3</span>
+        <span class="step-text">Custom Plan</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-pill" id="step-nav-4">
+        <span class="step-circle">4</span>
+        <span class="step-text">Learn &amp; Practice</span>
+      </div>
+    </div>
+
+    <!-- Main Workspace Layout -->
+    <main class="main-layout">
+      <!-- Left Column: Student Profile & Progress -->
+      <aside class="sidebar-panel">
+        <!-- Student Info Card -->
+        <div class="card glass-card" id="student-summary-card">
+          <div class="card-header">
+            <h3>Student Profile</h3>
+            <span class="level-tag" id="profile-level-badge">Beginner</span>
+          </div>
+          <div class="profile-details">
+            <div class="detail-row">
+              <span class="label">Student</span>
+              <strong id="profile-name">Himaja</strong>
+            </div>
+            <div class="detail-row">
+              <span class="label">Subject</span>
+              <strong id="profile-subject">Operating Systems</strong>
+            </div>
+            <div class="detail-row">
+              <span class="label">Goal</span>
+              <span id="profile-goal">Semester Exam Prep</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Attempts</span>
+              <span id="profile-attempts-display">Max 2 / topic</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Curriculum Progress Card -->
+        <div class="card glass-card" id="curriculum-card">
+          <div class="card-header">
+            <h3>Curriculum Progress</h3>
+            <span class="badge-accent" id="progress-counter">0 / 0</span>
+          </div>
+          <ul class="curriculum-list" id="curriculum-list-items">
+            <li class="empty-list-notice">Plan will appear after diagnostic check...</li>
+          </ul>
+        </div>
+
+        <!-- Student Study Notes Card -->
+        <div class="card glass-card" id="student-notes-card">
+          <div class="card-header">
+            <h3>My Study Notes</h3>
+            <span class="badge-accent" id="notes-save-status">Saved</span>
+          </div>
+          <div class="notes-content">
+            <textarea id="student-notes-textarea" placeholder="Jot down notes, formulas, or key reminders here... (Auto-saves)" rows="6"></textarea>
+            <div class="notes-footer">
+              <span id="notes-char-count" class="text-muted">0 chars</span>
+              <div class="notes-actions">
+                <button type="button" id="btn-copy-notes" class="btn-ctrl" title="Copy notes to clipboard">Copy</button>
+                <button type="button" id="btn-download-txt" class="btn-ctrl" title="Download for Notepad (.txt)">📄 Notepad (.txt)</button>
+                <button type="button" id="btn-download-docx" class="btn-ctrl" title="Download for Word (.docx)">📝 Word (.docx)</button>
+                <button type="button" id="btn-clear-notes" class="btn-ctrl" title="Clear notes">Clear</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right Column: Dynamic Stages -->
+      <section class="content-panel">
+
+        <!-- STAGE 1: Profile & Subject Setup Form -->
+        <div class="card glass-card stage-card active" id="stage-setup">
+          <div class="card-header">
+            <div>
+              <span class="step-tag">Step 1 of 4</span>
+              <h2>Start Your Personalized Learning Session</h2>
+            </div>
+          </div>
+          <p class="stage-desc">
+            Choose a subject or type your own custom topic. We'll give you a quick 3-question baseline check, then tailor an adaptive curriculum specifically for you.
+          </p>
+
+          <form id="setup-form" class="tutor-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="input-name">Your Name</label>
+                <input type="text" id="input-name" value="Himaja" required placeholder="Enter your name">
+              </div>
+
+              <div class="form-group">
+                <label for="input-subject-select">Subject to Learn</label>
+                <select id="input-subject-select">
+                  <option value="Operating Systems" selected>Operating Systems</option>
+                  <option value="Python">Python Programming</option>
+                  <option value="DBMS">DBMS (Database Management)</option>
+                  <option value="Computer Networks">Computer Networks</option>
+                  <option value="Machine Learning">Machine Learning &amp; AI</option>
+                  <option value="Data Structures & Algorithms">Data Structures &amp; Algorithms</option>
+                  <option value="Web Development">Full Stack Web Development</option>
+                  <option value="Cloud Computing">Cloud Computing (AWS / Azure)</option>
+                  <option value="Cybersecurity">Cybersecurity &amp; Ethical Hacking</option>
+                  <option value="System Design">System Design &amp; Distributed Systems</option>
+                  <option value="DevOps">DevOps, Docker &amp; Kubernetes</option>
+                  <option value="Object-Oriented Programming">Object-Oriented Programming (Java / C++)</option>
+                  <option value="Generative AI">Generative AI &amp; LLMs</option>
+                  <option value="Data Science">Data Science &amp; Analytics</option>
+                  <option value="__custom__">✏️ Other (Type Custom Subject...)</option>
+                </select>
+                <div id="custom-subject-wrapper" style="margin-top: 10px; display: none;">
+                  <input type="text" id="input-custom-subject" placeholder="e.g. Rust Programming, Blockchain, Mobile Dev...">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="input-level">Your Current Level</label>
+                <select id="input-level">
+                  <option value="Beginner" selected>Beginner (Start with clear intuition)</option>
+                  <option value="Intermediate">Intermediate (Technical depth &amp; code)</option>
+                  <option value="Advanced">Advanced (System architecture &amp; trade-offs)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="input-goal">Your Goal</label>
+                <input type="text" id="input-goal" value="Semester Exam Prep" placeholder="e.g. Interview prep, college exam...">
+              </div>
+
+              <div class="form-group">
+                <label for="input-attempts">Max Quiz Attempts Per Topic</label>
+                <select id="input-attempts">
+                  <option value="1">1 Attempt (Strict / Exam Mode)</option>
+                  <option value="2" selected>2 Attempts (Standard Adaptive)</option>
+                  <option value="3">3 Attempts (Extended Practice)</option>
+                  <option value="4">4 Attempts (Deep Mastery)</option>
+                  <option value="5">5 Attempts (Maximum Guidance)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary btn-lg" id="start-btn">
+                Start Learning
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- STAGE 2: Diagnostic Baseline Test -->
+        <div class="card glass-card stage-card" id="stage-diagnostic">
+          <div class="card-header">
+            <div>
+              <span class="step-tag">Step 2 of 4</span>
+              <h2 id="diagnostic-title">Quick Knowledge Check</h2>
+            </div>
+            <span class="level-tag" id="diagnostic-subject-badge">Operating Systems</span>
+          </div>
+
+          <div class="info-banner">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <p id="diagnostic-prompt-text">Answer these quick questions so we can identify what you already know and what you need to focus on.</p>
+          </div>
+
+          <form id="diagnostic-form">
+            <div class="questions-container" id="diagnostic-questions-list"></div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary btn-lg" id="btn-submit-diagnostic">
+                Submit &amp; Create My Plan
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- STAGE 2.5: Diagnostic Results Breakdown (Strengths & Weaknesses) -->
+        <div class="card glass-card stage-card" id="stage-diagnostic-results">
+          <div class="card-header">
+            <div>
+              <span class="step-tag">Step 2 of 4 &middot; Diagnostic Evaluation</span>
+              <h2>Your Knowledge Assessment Profile</h2>
+            </div>
+            <div class="score-badge" id="diagnostic-results-score-pill">Score: 0%</div>
+          </div>
+
+          <p class="stage-desc">
+            Here is what our diagnostic assessment discovered about your current baseline.
+            Review your strengths and priority focus areas before generating your customized curriculum.
+          </p>
+
+          <div class="diagnostic-results-grid">
+            <div class="diag-card diag-strong">
+              <div class="diag-card-header">
+                <span class="diag-icon">✓</span>
+                <div>
+                  <h4>Demonstrated Strengths</h4>
+                  <p class="diag-subtitle">Topics where you showed good baseline understanding:</p>
+                </div>
+              </div>
+              <ul id="diag-strong-list" class="diag-list"></ul>
+            </div>
+
+            <div class="diag-card diag-weak">
+              <div class="diag-card-header">
+                <span class="diag-icon">⚡</span>
+                <div>
+                  <h4>Priority Focus Areas</h4>
+                  <p class="diag-subtitle">Topics that need attention and will be scheduled first:</p>
+                </div>
+              </div>
+              <ul id="diag-weak-list" class="diag-list"></ul>
+            </div>
+          </div>
+
+          <div class="diag-recommendation-banner">
+            <div class="diag-rec-icon">🎯</div>
+            <div>
+              <strong>Recommended Learning Trajectory:</strong>
+              <p id="diag-trajectory-text">The planner will structure your curriculum so weak topics are placed at the beginning, followed by advanced consolidation and final review.</p>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-primary btn-lg" id="btn-proceed-to-plan">
+              Generate My Personalized Plan
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- STAGE 3: Review & Customize Learning Plan -->
+        <div class="card glass-card stage-card" id="stage-plan-approval">
+          <div class="card-header">
+            <div>
+              <span class="step-tag">Step 3 of 4</span>
+              <h2>Your Personalized Learning Plan</h2>
+            </div>
+            <div class="score-badge" id="diagnostic-score-pill">Score: 80%</div>
+          </div>
+
+          <div class="assessment-recap">
+            <div class="tags-row">
+              <div class="tag-row-item">
+                <span class="label">Priority Focus Areas:</span>
+                <span id="weak-topics-list" class="tag-list"></span>
+              </div>
+              <div class="tag-row-item">
+                <span class="label">Strong Foundation:</span>
+                <span id="strong-topics-list" class="tag-list"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Plan Customizer with Drag and Drop -->
+          <div class="plan-customizer-box">
+            <div class="plan-customizer-header">
+              <div>
+                <h3>Curriculum Topics</h3>
+                <p class="text-muted">Drag &amp; drop items (⋮⋮) to reorder your study sequence, or add custom topics.</p>
+              </div>
+              <span class="badge-accent" id="plan-topics-counter">5 Topics</span>
+            </div>
+
+            <!-- Add Topic Input (Clean Top Placement) -->
+            <div class="add-topic-bar">
+              <input type="text" id="input-new-topic" placeholder="Add a new topic (e.g. Memory Paging, Deadlocks)..." />
+              <button type="button" class="btn btn-primary" id="btn-add-topic">
+                + Add Topic
+              </button>
+            </div>
+
+            <!-- Draggable Topic List -->
+            <div class="topic-items-list" id="proposed-plan-items"></div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary btn-lg" id="btn-approve-plan">
+              Approve Plan &amp; Start Lessons
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- STAGE 4: Lesson & Teaching View -->
+        <div class="card glass-card stage-card" id="stage-teaching">
+          <div class="card-header">
+            <div>
+              <span class="step-tag" id="lesson-topic-badge">Topic 1</span>
+              <h2 id="lesson-title">Lesson Overview</h2>
+            </div>
+            <span class="level-tag" id="lesson-difficulty-badge">Normal</span>
+          </div>
+
+          <!-- Revision Alert Banner (shown only when in revision loop) -->
+          <div id="teaching-revision-banner" class="alert-box alert-warning" style="display: none; margin-bottom: 16px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            <p id="teaching-revision-text"><strong>Topic Revision:</strong> Score on previous attempt was below 70%. Review the simplified explanation and key takeaways below before retrying the quiz.</p>
+          </div>
+
+          <!-- Explanation -->
+          <div class="lesson-section">
+            <h3>Core Explanation</h3>
+            <p id="lesson-explanation" class="lesson-text"></p>
+          </div>
+
+          <!-- Concepts -->
+          <div class="lesson-section">
+            <h3>Key Takeaways</h3>
+            <ul id="lesson-concepts" class="concepts-bullet-list"></ul>
+          </div>
+
+          <!-- Example -->
+          <div class="lesson-section highlight-box">
+            <h3>Real-World Example</h3>
+            <div id="lesson-example" class="example-content"></div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary btn-lg" id="btn-goto-quiz">
+              Take Topic Quiz
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- STAGE 5: Topic Quiz -->
+        <div class="card glass-card stage-card" id="stage-quiz">
+          <div class="card-header">
+            <div>
+              <span class="step-tag">Topic Check</span>
+              <h2 id="quiz-topic-title">Evaluation Quiz</h2>
+            </div>
+            <span id="quiz-attempt-badge" class="badge-attempt">Attempt 1</span>
+          </div>
+
+          <div id="revision-notice" class="alert-box alert-warning" style="display: none;">
+            <p id="revision-feedback-text">Adaptive Revision: Score was below 70%. Let's review key concepts with this refresher check.</p>
+          </div>
+
+          <form id="quiz-form">
+            <div class="questions-container" id="quiz-questions-list"></div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary btn-lg" id="btn-submit-quiz">
+                Submit Answers
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- STAGE 6: Quiz Evaluation Result -->
+        <div class="card glass-card stage-card" id="stage-quiz-result">
+          <div class="card-header">
+            <div>
+              <span class="step-tag">Quiz Feedback</span>
+              <h2>Evaluation Result</h2>
+            </div>
+            <div class="score-pill" id="result-score-pill">0%</div>
+          </div>
+
+          <div class="result-breakdown">
+            <!-- Explicit Attempt Status & Decision Banner -->
+            <div id="result-attempt-banner" class="alert-box" style="margin-bottom: 18px;"></div>
+            <p class="result-message" id="result-feedback-message"></p>
+            <div class="concepts-grid">
+              <div class="concept-column strong-col">
+                <h4>Mastered Concepts</h4>
+                <ul id="result-strong-list"></ul>
+              </div>
+              <div class="concept-column weak-col">
+                <h4>Areas to Review</h4>
+                <ul id="result-weak-list"></ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Question-by-Question Review with Correct Answers & Explanations -->
+          <div class="qa-review-section" id="result-qa-review-section">
+            <div class="qa-review-header">
+              <h3>📝 Question Review &amp; Explanations</h3>
+              <p class="text-muted">Review each question with your answer, the verified correct solution, and a concise concept explanation.</p>
+            </div>
+            <div class="qa-review-list" id="result-qa-review-list"></div>
+          </div>
+
+          <!-- Targeted Revision & Refresher Guidance Box -->
+          <div class="result-revision-card" id="result-revision-box" style="display: none;">
+            <div class="result-revision-header">
+              <span class="revision-header-icon">💡</span>
+              <div>
+                <h4>Targeted Revision &amp; Key Takeaways</h4>
+                <p class="text-muted">Study these core points to master the concepts before re-attempting or advancing.</p>
+              </div>
+            </div>
+            <div class="revision-content-body" id="result-revision-body"></div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary btn-lg" id="btn-continue-workflow">
+              Continue to Next Step
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- STAGE 7: Final Report -->
+        <div class="card glass-card stage-card" id="stage-final-report">
+          <div class="card-header">
+            <div>
+              <span class="badge-accent">Course Completed!</span>
+              <h2>Student Mastery Report</h2>
+            </div>
+          </div>
+
+          <div class="final-report-grid">
+            <div class="report-score-card">
+              <div class="score-circle">
+                <span id="final-score-val">0</span>
+                <small>%</small>
+              </div>
+              <span class="score-label">Overall Mastery Score</span>
+            </div>
+            <div class="report-stats">
+              <div class="stat-card">
+                <span class="stat-num" id="final-topics-count">0</span>
+                <span class="stat-label">Topics Mastered</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-num" id="final-attempts-count">0</span>
+                <span class="stat-label">Total Quizzes</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="report-sections">
+            <div class="report-box">
+              <h4>Strong Areas</h4>
+              <ul id="final-strong-areas" class="check-list"></ul>
+            </div>
+            <div class="report-box">
+              <h4>Recommended Next Steps</h4>
+              <ul id="final-recommendations" class="recommend-list"></ul>
+            </div>
+          </div>
+
+          <div class="form-actions" style="gap: 12px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary btn-lg" id="btn-download-final-txt">
+              📄 Download Notepad Notes (.txt)
+            </button>
+            <button type="button" class="btn btn-secondary btn-lg" id="btn-download-final-docx">
+              📝 Download Word Document (.docx)
+            </button>
+            <button class="btn btn-secondary btn-lg" id="btn-restart-session">
+              Start Another Subject
+            </button>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <!-- Study History & Memory Drawer (Tracks Completed Topics, Teaching, Questions & Answers, Scores) -->
+    <div class="study-history-drawer" id="study-history-drawer">
+      <div class="drawer-header">
+        <div>
+          <h3>Study Log &amp; Progress Memory</h3>
+          <p class="drawer-intro">Review everything you've learned, what you answered, and your topic mastery.</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button type="button" id="btn-clear-history" class="btn-ctrl-danger" title="Clear all study logs">🗑️ Clear All Logs</button>
+          <button id="close-history-drawer-btn" class="btn-close" aria-label="Close drawer">&times;</button>
+        </div>
+      </div>
+      <div class="history-content-list" id="study-history-timeline">
+        <div class="empty-history-notice">No completed sessions yet. As you study, your lesson summaries, quiz submissions, and scores will be stored here.</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js?v=9"></script>
+</body>
+</html>
